@@ -49,9 +49,9 @@ MouseSetBreakCommand(event, wParam, lParam) {
 SetNextCommand(afterYankHook, virtualKey, scanKey) {
     global nextCommand, afterYankMouseHook
 
-    alt := GetKeyState("Alt", "P")
-    shift := GetKeyState("Shift", "P") 
-    control := GetKeyState("Control", "P") 
+    alt := GetKeyState("Alt")
+    shift := GetKeyState("Shift") 
+    control := GetKeyState("Control") 
     v := virtualKey == 0x56
 
     afterYankHook.Stop()
