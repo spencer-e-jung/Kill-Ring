@@ -1,0 +1,7 @@
+[submodule "Lib/MouseHook"]
+	path = Lib/MouseHook
+	url = https://github.com/nperovic/MouseHook.git
+[submodule "Lib/Yunit"]
+	path = Lib/Yunit
+	url = https://github.com/Uberi/Yunit.git
+	branch = v2
