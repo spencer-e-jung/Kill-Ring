@@ -96,6 +96,7 @@ YankCommand() {
         ; XXX: The following loop prevents errors when holding Ctrl-V.
         while (GetKeyState("v") && GetKeyState("Control"))
             Sleep(10)
+        NextYankIndex(nextCommand)
         YankDispatch()
     } else if (killFile) {
         A_Clipboard := killFile
@@ -123,7 +124,6 @@ YankDispatch() {
         return
 
     killLock := true
-    NextYankIndex(nextCommand)
     switch nextCommand {
         case "Up":
             YankCommand()
