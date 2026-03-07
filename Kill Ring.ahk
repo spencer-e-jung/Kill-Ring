@@ -88,20 +88,14 @@ YankCommand() {
     afterYankMouseHook.Start()
 
     ; XXX: Since we have two callbacks we're waiting on we use polling instead.
-    Loop {
-        if (nextCommand) 
-            break
+    while (!nextCommand) 
         Sleep(10)
-    }
 
     if (nextCommand != "Break") {    
         Send("^z")
         ; XXX: The following loop prevents errors when holding Ctrl-V.
-        Loop {
-            if (!GetKeyState("v", "P") || !GetKeyState("Control", "P"))
-                break
+        while (GetKeyState("v") && GetKeyState("Control"))
             Sleep(10)
-        }
         YankDispatch()
     } else if (killFile) {
         A_Clipboard := killFile
