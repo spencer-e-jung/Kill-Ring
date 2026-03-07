@@ -31,12 +31,14 @@ Kill(dataType) {
     clipboard := ClipboardAll()
     
     ; XXX: files paste too slow to be undone in succession.
-    static CF_HDROP := 15
-    killFile := DllCall("IsClipboardFormatAvailable", "UInt", CF_HDROP) && 
-        clipboard
+    if (!killLock) {
+        static CF_HDROP := 15
+        killFile := DllCall("IsClipboardFormatAvailable", "UInt", CF_HDROP) && 
+            clipboard
 
-    if (!killLock && !killFile)
-        killRing.InsertAt(1, clipboard)
+        if (!killFile) 
+            killRing.InsertAt(1, clipboard)
+    }
 }
 
 MouseSetBreakCommand(event, wParam, lParam) {
