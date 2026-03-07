@@ -142,27 +142,14 @@ YankDispatch() {
     killLock := false
 }
 
-^v::{
+YankHotKey(index, command) {
     global yankIndex, nextCommand
-    yankIndex := 1
-    nextCommand := "Up"
+    yankIndex := index
+    nextCommand := command
     YankDispatch()
 }
-+^v::{
-    global killRing, yankIndex, nextCommand
-    yankIndex := killRing.Length
-    nextCommand := "Down"
-    YankDispatch()
-}
-!^v::{
-    global yankIndex, nextCommand
-    yankIndex := 1
-    nextCommand := "Pop Up"
-    YankDispatch()
-}
-!+^v::{
-    global killRing, yankIndex, nextCommand
-    yankIndex := killRing.Length
-    nextCommand := "Pop Down"
-    YankDispatch()
-}
+
+^v::YankHotKey(1, "Up")
++^v::YankHotKey(killRing.Length, "Down")
+!^v::YankHotKey(1, "Pop Up")
+!+^v::YankHotKey(killRing.Length, "Pop Down")
