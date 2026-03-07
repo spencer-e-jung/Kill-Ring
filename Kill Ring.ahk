@@ -69,7 +69,7 @@ SetNextCommand(afterYankHook, virtualKey, scanKey) {
         nextCommand := "Up"
     else {
         nextCommand := "Break"
-        Send(Format("{{}Blind{}}{{}VK{1:#X}{}}", virtualKey))
+        Send(Format("{{}Blind{}}{{}VK{1:#X}SC{2:#X}{}}", virtualKey, scanKey))
     }
 }
 
