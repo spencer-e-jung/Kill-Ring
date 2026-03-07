@@ -5,6 +5,7 @@
 global killRing := []
 global killLock := false
 global killFile := false
+global initialYank := false
 global yankIndex := 1
 
 InstallKeybdHook()
@@ -74,10 +75,14 @@ SetNextCommand(afterYankHook, virtualKey, scanKey) {
 }
 
 YankCommand() {
-    global killRing, killFile, yankIndex, nextCommand
+    global killRing, killFile, yankIndex, initialYank, nextCommand
 
-    if (!killFile || yankIndex != 1)
+    if (killFile && initialYank && InStr(nextCommand, "Up"))
+        A_Clipboard := killFile
+    else 
         A_Clipboard := killRing[yankIndex]
+
+    initialYank := false
     
     Hotkey("^v", , "Off")
     Send("^v")
@@ -143,9 +148,10 @@ YankDispatch() {
 }
 
 YankHotKey(index, command) {
-    global yankIndex, nextCommand
+    global yankIndex, nextCommand, initialYank
     yankIndex := index
     nextCommand := command
+    initialYank := true
     YankDispatch()
 }
 
