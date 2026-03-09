@@ -5,8 +5,8 @@
 global killRing := []
 global killLock := false
 global killFile := false
+global nextCommand := ""
 global initialYank := false
-global yankIndex := 1
 
 InstallKeybdHook()
 global afterYankHook := InputHook()
@@ -16,7 +16,6 @@ afterYankHook.KeyOpt(
     , "-N"
 )
 afterYankHook.OnKeyDown := SetNextCommand
-global nextCommand := ""
 
 global afterYankMouseHook := MouseHook(
     "LButton Down RButton Down MButton Down"
@@ -76,13 +75,11 @@ SetNextCommand(afterYankHook, virtualKey, scanKey) {
     }
 }
 
-YankCommand() {
-    global killRing, killFile, yankIndex, initialYank, nextCommand
+YankCommand(command, index, initialYank) {
+    global killRing, killFile, nextCommand
 
-    if (killFile && initialYank && InStr(nextCommand, "Up"))
-        A_Clipboard := killFile
-    else 
-        A_Clipboard := killRing[yankIndex]
+    if (!(killFile && initialYank && InStr(command, "Up")))
+        A_Clipboard := killRing[index]
 
     initialYank := false
     
@@ -103,61 +100,49 @@ YankCommand() {
         ; XXX: The following loop prevents errors when holding Ctrl-V.
         while (GetKeyState("v") && GetKeyState("Control"))
             Sleep(10)
-        NextYankIndex(nextCommand)
-        YankDispatch()
+        YankDispatch(nextCommand, index)
     } else if (killFile) {
         A_Clipboard := killFile
     }
 }
 
-NextYankIndex(command) {
-    global killRing, yankIndex
+NextYankIndex(command, index) {
+    global killRing
 
     if (InStr(command, "Up")) {
-        yankIndex++
-        if (yankIndex > killRing.Length)
-            yankIndex := 1
+        if (!InStr(command, "Pop"))
+            index++
+        if (index > killRing.Length)
+            index := 1
     } else if (InStr(command, "Down")) {
-        yankIndex--
-        if (yankIndex < 1)
-            yankIndex := killRing.Length
+        index--
+        if (index < 1)
+            index := killRing.Length
     }
+    return index
 }
 
-YankDispatch() {
-    global killRing, killLock, yankIndex, nextCommand
+YankDispatch(command, index, initialYank := false) {
+    global killRing, killLock
+
+    if (InStr(command, "Pop"))
+        killRing.RemoveAt(index)
 
     if (killRing.Length == 0)
         return
+    
+    if (!initialYank)
+        index := NextYankIndex(command, index)
 
     killLock := true
-    switch nextCommand {
-        case "Up":
-            YankCommand()
-        case "Down":
-            YankCommand()
-        case "Pop Up": 
-            killRing.RemoveAt(yankIndex)
-            if (killRing.Length != 0)
-                YankCommand()
-        case "Pop Down":
-            killRing.RemoveAt(yankIndex)
-            if (killRing.Length != 0)
-                YankCommand()
-        default: MsgBox("Invalid Yank Command.")
+    switch command {
+        case "Up", "Down", "Pop Up", "Pop Down":
+            YankCommand(command, index, initialYank)
+        default: 
+            MsgBox("Invalid Yank Command.")
     }
     killLock := false
 }
 
-YankHotKey(index, command) {
-    global yankIndex, nextCommand, initialYank
-    yankIndex := index
-    nextCommand := command
-    initialYank := true
-    YankDispatch()
-}
-
-^v::YankHotKey(1, "Up")
-+^v::YankHotKey(killRing.Length, "Down")
-!^v::YankHotKey(1, "Pop Up")
-!+^v::YankHotKey(killRing.Length, "Pop Down")
+^v::YankDispatch("Up", 1, true)
++^v::YankDispatch("Down", killRing.Length, true)

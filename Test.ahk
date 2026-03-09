@@ -14,7 +14,6 @@ ResetGlobals() {
     global killRing := []
     global killLock := false
     global killFile := false
-    global yankIndex := 1
     global initialYank := true
     global nextCommand := ""
 }
@@ -256,13 +255,15 @@ class TestKillRing {
 
             global killRing := ["hello"]
             global killFile := "file"
-            global yankIndex := 1
             global initialYank := true
             global nextCommand := "Up"
+            killLock := true
+            A_Clipboard := killFile
+            killLock := false
 
             BreakSoon()
 
-            YankCommand()
+            YankCommand("Up", 1, true)
             txt := GetText(g)
 
             Destroy(g)
@@ -282,7 +283,7 @@ class TestKillRing {
 
             BreakSoon(, "Up")
 
-            YankCommand()
+            YankCommand("Up", 1, false)
 
             Destroy(g)
 
@@ -295,18 +296,17 @@ class TestKillRing {
             g := CreatePasteGui()
 
             global killRing := ["A","B"]
-            global yankIndex := 1
             global nextCommand := "Up"
 
             BreakSoon(, "Up")
 
-            YankCommand()
+            YankCommand("Up", 1, false)
 
             txt := GetText(g)
 
             Destroy(g)
 
-            Yunit.Assert(yankIndex == 2 && txt == "A")
+            Yunit.Assert(txt == "A")
         }
 
         ; XXX: This is not a very good test.
@@ -325,11 +325,11 @@ class TestKillRing {
             Send("{Ctrl down}{v down}")
             SetTimer(() => Send("{v up}"), 200)
 
-            YankCommand()
+            YankCommand("Up", 1, false)
 
             Destroy(g)
 
-            Yunit.Assert(A_TickCount - start >= 200 && yankIndex == 2)
+            Yunit.Assert(A_TickCount - start >= 200)
         }
 
         TestKillFileOnClipboardEndsOnClipboard() {
@@ -339,13 +339,12 @@ class TestKillRing {
 
             global killFile := "file"
             global killRing := ["from ring", "other"]
-            global yankIndex := 2
             global initialYank := false
             global killLock := true
 
             BreakSoon()
 
-            YankCommand()
+            YankCommand("Up", 2, false)
 
             Destroy(g)
 
@@ -359,55 +358,85 @@ class TestKillRing {
             ResetGlobals()
 
             global killRing := ["a","b","c"]
-            global yankIndex := 3
             
-            NextYankIndex("Up") 
+            index := NextYankIndex("Up", 3) 
             
-            Yunit.Assert(yankIndex == 1)
+            Yunit.Assert(index == 1)
         }
 
         TestDownWraps() {
             ResetGlobals()
 
             global killRing := ["a","b","c"]
-            global yankIndex := 1
             
-            NextYankIndex("Down")
+            index := NextYankIndex("Down", 1)
             
-            Yunit.Assert(yankIndex == 3)
+            Yunit.Assert(index == 3)
         }
     }
 
     class TestYankDispatch {
 
-        TestPopNeverUnderflows() {
+        TestPopUpRemovesItem() {
+            ResetGlobals()
+
+            global killRing := ["a", "b"]
+
+            g := CreatePasteGui()
+
+            BreakSoon()
+            YankDispatch("Pop Up", 1, false)
+
+            Destroy(g)
+
+            Yunit.Assert(killRing.Length == 1 && killRing[1] == "b")
+        }
+
+        TestPopDownRemovesItem() {
+            ResetGlobals()
+
+            global killRing := ["a", "b"]
+
+            g := CreatePasteGui()
+
+            BreakSoon()
+            YankDispatch("Pop Down", 2, false)
+
+            Destroy(g)
+
+            Yunit.Assert(killRing.Length == 1 && killRing[1] == "a")
+        }
+
+        TestPopNeverOverflows() {
+            global nextCommand
+
             ResetGlobals()
 
             global killRing := ["a"]
-            global yankIndex := 1
 
-            Loop 2 {
-                BreakSoon()
+            g := CreatePasteGui()
+            
+            SetTimer(() => nextCommand := "Pop Up", 200)
+            YankDispatch("Pop Up", 1, true)
 
-                global nextCommand := "Pop Up"
-                YankDispatch()
-            }
+            Destroy(g)
 
             Yunit.Assert(killRing.Length == 0)
         }
 
-        TestPopDownNeverUnderflows() {
+        TestPopDownNeverOverflows() {
+            global nextCommand
+
             ResetGlobals()
 
             global killRing := ["a"]
-            global yankIndex := 1
 
-            Loop 2 {
-                BreakSoon()
+            g := CreatePasteGui()
             
-                global nextCommand := "Pop Down"
-                YankDispatch()
-            }
+            SetTimer(() => nextCommand := "Pop Down", 200)
+            YankDispatch("Pop Down", 1, true)
+
+            Destroy(g)
 
             Yunit.Assert(killRing.Length == 0)
         }
@@ -416,10 +445,9 @@ class TestKillRing {
             ResetGlobals()
 
             global killRing := ["a"]
-            global yankIndex := 1
 
             global nextCommand := "InvalidCommand"
-            YankDispatch()
+            YankDispatch("InvalidCommand", 1, true)
 
             Yunit.Assert(killRing.Length == 1)
         }
@@ -428,10 +456,9 @@ class TestKillRing {
             ResetGlobals()
 
             global killRing := []
-            global yankIndex := 1
 
             global nextCommand := "Up"
-            YankDispatch()
+            YankDispatch("Up", 1, true)
 
             Yunit.Assert(true)
         }
