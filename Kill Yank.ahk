@@ -83,9 +83,7 @@ YankCommand(command, index, initialYank) {
 
     initialYank := false
     
-    Hotkey("^v", , "Off")
-    Send("^v")
-    Hotkey("^v", , "On")
+    Send("+{Insert}")
 
     nextCommand := ""
     afterYankHook.Start()
@@ -95,7 +93,7 @@ YankCommand(command, index, initialYank) {
     while (!nextCommand) 
         Sleep(10)
 
-    if (nextCommand != "Break") {    
+    if (nextCommand != "Break") {
         Send("^z")
         ; XXX: The following loop prevents errors when holding Ctrl-V.
         while (GetKeyState("v") && GetKeyState("Control"))

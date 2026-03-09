@@ -36,7 +36,7 @@ UnsetPrefix(event, wParam, lParam) {
     registerKey := "Break"
 }
 
-CopyToRegister(cut := false) {
+CopyToRegister() {
     global prefixHook, unprefixHook, registerKey, registers
 
     prefixHook.Start()
@@ -49,7 +49,7 @@ CopyToRegister(cut := false) {
         killLock := true
         tempClipboard := ClipboardAll()
         A_Clipboard := ""
-        Send(cut ? "^x" : "^c")
+        Send("^{Insert}")
         ClipWait(1)
         registers[registerKey] := ClipboardAll()
         A_Clipboard := tempClipboard
@@ -72,10 +72,8 @@ PasteFromRegister() {
             killLock := true
             tempClipboard := ClipboardAll()
             A_Clipboard := registers[registerKey]
-            Hotkey("^v", , "Off")
-            Send("^v")
-            Hotkey("^v", , "On")
-            ; XXX: Wait for the Ctrl-v to be proccessed.
+            Send("+{Insert}")
+            ; XXX: Wait for the Shift-Insert to be processed.
             Sleep(32)
             A_Clipboard := tempClipboard
             killLock := false
@@ -85,5 +83,4 @@ PasteFromRegister() {
 }
 
 #!c::CopyToRegister()
-#!x::CopyToRegister(true)
 #!v::PasteFromRegister()
