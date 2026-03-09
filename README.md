@@ -4,12 +4,12 @@
     <img src="./Images/Kill Ring.png" width="300px">
 </p>
 
-This program emulates the Emacs kill-ring in Microsoft Windows. It does this in the following manner:
+This program emulates the Emacs kill-ring in Microsoft Windows.It does this in the following manner:
 
 1. Copying non-files adds the copyied content to the kill-ring.
-2. Pressing Ctrl-v pastes the file or first item from the kill-ring Ctrl-Alt-v pops an item from the kill-ring.
-3. Subsequent presses to these commands undos the previous paste and pastes or pops the next item in the kill-ring.
-4. Ctrl-Shift-v and Ctrl-Alt-Shift-v reverse this operation pasting and poping in reverse order.
+2. Pressing Ctrl-v pastes the file or first item from the kill-ring while Ctrl-Shift-v pastes the last item from the kill-ring.
+3. Subsequent presses to these commands undoes the previous paste and pastes the next item in the kill-ring.
+4. Subsequent presses to Ctrl-Alt-v and Ctrl-Alt-Shift-v perform the matching operations but pop the element from the ring before moving to the next item.
 
 # Requirements
 
