@@ -4,7 +4,8 @@
 #Include <Yunit\Yunit>
 #Include <Yunit\Window>
 
-Yunit.Use(YunitWindow).Test(TestKillRing)
+; Yunit.Use(YunitWindow).Test(TestKillRing)
+Yunit.Use(YunitWindow).Test(TestRegisters)
 
 ResetGlobals() {
     A_Clipboard := ""
@@ -461,6 +462,200 @@ class TestKillRing {
             YankDispatch("Up", 1, true)
 
             Yunit.Assert(true)
+        }
+    }
+}
+
+ResetGlobalsForRegisters() {
+    A_Clipboard := ""
+    Sleep(128)
+    global registers := Map()
+    global registerKey := ""
+    global killLock := false
+}
+
+class TestRegisters {
+
+    class TestSetPrefix {
+
+        TestSetPrefixSetsRegisterKey() {
+            global registerKey, prefixHook, unprefixHook
+            
+            ResetGlobalsForRegisters()
+            
+            prefixHook.Start()
+            unprefixHook.Start()
+            SetPrefix(prefixHook, 0x1B, 1)
+
+            Yunit.Assert(registerKey == "Escape")
+        }
+    }
+
+    class TestUnsetPrefix {
+
+        TestUnsetPrefixSetsRegisterKey() {
+            global registerKey, prefixHook, unprefixHook
+            
+            ResetGlobalsForRegisters()
+            
+            prefixHook.Start()
+            unprefixHook.Start()
+            UnsetPrefix("", 0, 0)
+
+            Yunit.Assert(registerKey == "Break")
+        }
+    }
+
+    class TestCopyToRegister {
+
+        TestRegisterKeyBreakDoesNothing() {
+            global registers, registerKey
+            
+            ResetGlobalsForRegisters()
+
+            registerKey := "Break"
+
+            CopyToRegister()
+
+            Yunit.Assert(registers.Count == 0)
+        }
+
+        TestClipboardIsResetAfterCopy() {
+            global registers
+            
+            ResetGlobalsForRegisters()
+
+            g := CreatePasteGui()
+            SetText(g, "test content")
+            SelectAll()
+            CopySelection()
+
+            tempClipboard := A_Clipboard
+
+            SetTimer(() => Send("a"), -200)
+            SetText(g, "test not content")
+            SelectAll()
+
+            CopyToRegister()
+
+            Destroy(g)
+
+            Yunit.Assert(A_Clipboard == tempClipboard)
+        }
+
+        TestRegisterIsSetOnCopy() {
+            global registers
+            
+            ResetGlobalsForRegisters()
+
+            g := CreatePasteGui()
+            SetText(g, "register content")
+            SelectAll()
+
+            SetTimer(() => Send("z"), -200)
+
+            CopyToRegister()
+
+            Sleep(128)
+            Destroy(g)
+
+            A_Clipboard := registers["z"]
+            Yunit.Assert(A_Clipboard == "register content")
+        }
+
+        TestCutOptionCuts() {
+            global registers
+            
+            ResetGlobalsForRegisters()
+
+            g := CreatePasteGui()
+            SetText(g, "cut me")
+            SelectAll()
+
+            SetTimer(() => Send("x"), -200)
+
+            CopyToRegister(true)
+
+            Destroy(g)
+
+            A_Clipboard := registers["x"]
+            Yunit.Assert(A_Clipboard == "cut me")
+        }
+
+        TestCopyOptionCopies() {
+            global registers
+            
+            ResetGlobalsForRegisters()
+
+            g := CreatePasteGui()
+            SetText(g, "copy me")
+            SelectAll()
+
+            SetTimer(() => Send("c"), -200)
+
+            CopyToRegister(false)
+
+            Destroy(g)
+
+            A_Clipboard := registers["c"]
+            Yunit.Assert(A_Clipboard == "copy me")
+        }
+    }
+
+    class TestPasteFromRegister {
+
+        TestRegisterKeyBreakDoesNothing() {
+            global registers, registerKey
+            
+            ResetGlobalsForRegisters()
+
+            registers["a"] := "something"
+            registerKey := "Break"
+            tempClipboard := A_Clipboard
+
+            PasteFromRegister()
+
+            Yunit.Assert(A_Clipboard == tempClipboard)
+        }
+
+        TestClipboardIsResetAfterPaste() {
+            global registers, killLock
+            
+            ResetGlobalsForRegisters()
+
+            registers["r"] := "pasted content"
+            tempClipboard := "original"
+            killLock := true
+            A_Clipboard := tempClipboard
+            killLock := false
+
+            g := CreatePasteGui()
+            SetTimer(() => Send("r"), -200)
+
+            PasteFromRegister()
+
+            Destroy(g)
+
+            Yunit.Assert(A_Clipboard == tempClipboard)
+        }
+
+        TestPasteFromRegisterPastes() {
+            global registers
+            
+            ResetGlobalsForRegisters()
+
+            registers["p"] := "paste value"
+
+            g := CreatePasteGui()
+            SetTimer(() => Send("p"), -200)
+
+            PasteFromRegister()
+
+            txt := GetText(g)
+            
+            Destroy(g)
+
+            Yunit.Assert(txt == "paste value")
         }
     }
 }

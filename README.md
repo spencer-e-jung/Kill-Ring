@@ -4,7 +4,7 @@
     <img src="./Images/Kill Ring.png" width="300px">
 </p>
 
-This program emulates the Emacs kill-ring in Microsoft Windows.It does this in the following manner:
+This program emulates the Emacs kill-ring, and registers in Microsoft Windows.It does this in the following manner:
 
 1. Copying non-files adds the copyied content to the kill-ring.
 2. Pressing Ctrl-v pastes the file or first item from the kill-ring while Ctrl-Shift-v pastes the last item from the kill-ring.
@@ -14,6 +14,10 @@ This program emulates the Emacs kill-ring in Microsoft Windows.It does this in t
 # Requirements
 
 This program requires [AutoHotkey-2.1-alpha.9+](https://www.autohotkey.com/download/2.1/).
+
+# Options
+
+To enable or disable options comment out the relevant `#Include`, or `global` lines in `Kill Ring.ahk`.
 
 # Tip
 
